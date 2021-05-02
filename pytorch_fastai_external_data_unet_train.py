@@ -64,7 +64,7 @@ class CONFIG():
     main_path = Path('../input/hubmap-kidney-segmentation')
     data_path = Path('../input/512x512-reduce-2/train')
     label_path = Path('../input/512x512-reduce-2/masks')
-    csv_path = '../input/hubmap-enhanced-masks/all_masks_v3.csv'
+    csv_path = '../input/hubmap-enhanced-masks/all_masks_v4.csv'
 
     # use test data
     use_test = False
@@ -84,8 +84,8 @@ class CONFIG():
     val_length = 500  # Randomly sample 500 validation tiles
 
     # TODO: Change these as per the dataset's mean and std
-    mean = np.array([0.63857758, 0.47466841, 0.6825213])
-    std = np.array([0.15948628, 0.22748484, 0.13951998])
+    mean = np.array([0.63808466, 0.47418504, 0.68202581])
+    std = np.array([0.16178218, 0.22919784, 0.14178402])
 
     # deepflash2 augmentation options
     zoom_sigma = 0.1
@@ -102,12 +102,12 @@ class CONFIG():
 
     # fastai Learner
     mixed_precision_training = True
-    batch_size = 14
+    batch_size = 32
     weight_decay = 0.01
     loss_func = torch.nn.BCEWithLogitsLoss()
     metrics = [Dice_soft(), Dice_th()]
     optimizer = ranger
-    max_learning_rate = 1e-3
+    max_learning_rate = 3e-3
     epochs = 16
 
 
@@ -203,7 +203,7 @@ class HuBMAPDataset(Dataset):
         return img2tensor((img/255.0 - cfg.mean)/cfg.std), img2tensor(mask)
 
 
-base_model = smp.UnetPlusPlus(encoder_name=cfg.encoder_name,
+base_model = smp.Linknet(encoder_name=cfg.encoder_name,
                               encoder_weights=cfg.encoder_weights,
                               in_channels=cfg.in_channels,
                               classes=cfg.classes)
@@ -256,3 +256,4 @@ for n, (tr, te) in enumerate(kfold):
                 'std': cfg.std}
     torch.save(state, f'unetplus_{cfg.encoder_name}_{fold}.pth',
                 pickle_protocol=2, _use_new_zipfile_serialization=False)
+    del model

@@ -36,7 +36,7 @@ import os.path
 
 sz = 1024   #the size of tiles
 reduce = 1 #reduce the original images by 4 times 
-MASKS = '../input/hubmap-enhanced-masks/all_masks_v3.csv'
+MASKS = '../input/hubmap-enhanced-masks/all_masks_v4.csv'
 #DATA = '../input/hubmap-kidney-segmentation/train/'
 OUT_TRAIN = 'train.zip'
 OUT_MASKS = 'masks.zip'
