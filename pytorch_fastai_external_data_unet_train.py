@@ -17,6 +17,12 @@ import torch.nn.functional as F
 import os
 import random
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--fold", default=0, type=int,
+                    help="fold")
+args = parser.parse_args()
 
 class Dice_soft(Metric):
     def __init__(self, axis=1):
@@ -113,7 +119,7 @@ class CONFIG():
     epochs = 16
     if debug:
         epochs=4
-        batch_size=32
+        batch_size=24
 
 
 cfg = CONFIG()
@@ -161,7 +167,7 @@ print(df_train)
 imgs_idxs = [x.replace('.png', '')
              for x in os.listdir(cfg.data_path) if '.png' in x]
 if cfg.debug:
-    imgs_idxs = imgs_idxs[:cfg.nfolds*32]
+    imgs_idxs = imgs_idxs[:cfg.nfolds*cfg.batch_size*2]
 
 for iname in list(set([x[:9] for x in imgs_idxs])):
     print('img name:', iname,
@@ -208,8 +214,8 @@ class HuBMAPDataset(Dataset):
             img, mask = augmented['image'], augmented['mask']
         return img2tensor((img/255.0 - cfg.mean)/cfg.std), img2tensor(mask)
 
-
-base_model = smp.UnetPlusPlus(encoder_name=cfg.encoder_name,
+name = 'Unet'
+base_model = smp.Unet(encoder_name=cfg.encoder_name,
                               encoder_weights=cfg.encoder_weights,
                               in_channels=cfg.in_channels,
                               classes=cfg.classes)
@@ -243,19 +249,21 @@ for n, (tr, te) in enumerate(kfold):
     valid_ds = HuBMAPDataset(X_val)
 
     data = ImageDataLoaders.from_dsets(train_ds, valid_ds, bs=cfg.batch_size,
-                                        num_workers=4, pin_memory=True)
+                                        num_workers=4*4, pin_memory=True)
 
     if torch.cuda.is_available():
         data.cuda(), model.cuda()
 
     cbs = [SaveModelCallback(monitor='dice_th', comp=np.greater)]
     learn = Learner(data, model, metrics=cfg.metrics, wd=cfg.weight_decay,
-                    loss_func=cfg.loss_func, opt_func=ranger, cbs=cbs)
+                    loss_func=cfg.loss_func, opt_func=ranger, cbs=cbs, model_dir='models'+'_'+name)
     if cfg.mixed_precision_training:
         learn.to_fp16()
 
     # make learner to use all GPUs
     learn.model = torch.nn.DataParallel(learn.model)
+    if fold != args.fold:
+        continue
 
     # Fit
     learn.fit_one_cycle(cfg.epochs, lr_max=cfg.max_learning_rate)
@@ -263,6 +271,5 @@ for n, (tr, te) in enumerate(kfold):
     # Save Model
     state = {'model': learn.model.state_dict(), 'mean': cfg.mean,
                 'std': cfg.std}
-    torch.save(state, f'unetplus_{cfg.encoder_name}_{fold}.pth',
+    torch.save(state, f'{name}_{cfg.encoder_name}_{fold}.pth',
                 pickle_protocol=2, _use_new_zipfile_serialization=False)
-    del model, train_ds, valid_ds, learn, data, cbs, state
