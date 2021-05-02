@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 import pandas as pd
 import segmentation_models_pytorch as smp
-from fastai.vision.all import *
+from fastai.vision.all import \
+        ranger, Metric, Path, ImageDataLoaders, SaveModelCallback, Learner, flatten_check
 # from deepflash2.all import *
 import albumentations as alb
 from sklearn.model_selection import KFold, GroupKFold, StratifiedKFold
@@ -59,6 +60,7 @@ class Dice_th(Metric):
 
 
 class CONFIG():
+    debug = True
 
     # data paths
     main_path = Path('../input/hubmap-kidney-segmentation')
@@ -109,6 +111,9 @@ class CONFIG():
     optimizer = ranger
     max_learning_rate = 3e-3
     epochs = 16
+    if debug:
+        epochs=4
+        batch_size=12
 
 
 cfg = CONFIG()
@@ -220,10 +225,15 @@ class HuBMAPModel(nn.Module):
 
 
 for n, (tr, te) in enumerate(kfold):
+
+    from fastai.vision.all import ranger
     fold = n
     print('=' * 10, f'FOLD {n}', '=' * 10)
     X_tr = [imgs_idxs[i] for i in tr]
     X_val = [imgs_idxs[i] for i in te]
+    if False:#cfg.debug:
+        X_tr = X_tr[:32]
+        X_val = X_val[:32]
     print('train:', len(X_tr), '| test:', len(X_val))
     print('groups train:', set([x[:9] for x in X_tr]),
             '\ngroups test:', set([x[:9] for x in X_val]))
@@ -254,6 +264,6 @@ for n, (tr, te) in enumerate(kfold):
     # Save Model
     state = {'model': learn.model.state_dict(), 'mean': cfg.mean,
                 'std': cfg.std}
-    torch.save(state, f'unetplus_{cfg.encoder_name}_{fold}.pth',
+    torch.save(state, f'unet_{cfg.encoder_name}_{fold}.pth',
                 pickle_protocol=2, _use_new_zipfile_serialization=False)
-    del model
+    # del model, train_ds, valid_ds
