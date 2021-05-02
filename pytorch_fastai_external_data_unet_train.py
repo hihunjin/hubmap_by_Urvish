@@ -60,7 +60,7 @@ class Dice_th(Metric):
 
 
 class CONFIG():
-    debug = True
+    debug = False
 
     # data paths
     main_path = Path('../input/hubmap-kidney-segmentation')
@@ -113,7 +113,7 @@ class CONFIG():
     epochs = 16
     if debug:
         epochs=4
-        batch_size=12
+        batch_size=32
 
 
 cfg = CONFIG()
@@ -160,7 +160,8 @@ print(df_train)
 # external_data = [x.replace('.png', '').replace("external_", "") for x in os.listdir(cfg.data_path) if '.png' in x if 'external' in x]
 imgs_idxs = [x.replace('.png', '')
              for x in os.listdir(cfg.data_path) if '.png' in x]
-# imgs_idxs = imgs_idxs
+if cfg.debug:
+    imgs_idxs = imgs_idxs[:cfg.nfolds*32]
 
 for iname in list(set([x[:9] for x in imgs_idxs])):
     print('img name:', iname,
@@ -208,7 +209,7 @@ class HuBMAPDataset(Dataset):
         return img2tensor((img/255.0 - cfg.mean)/cfg.std), img2tensor(mask)
 
 
-base_model = smp.Linknet(encoder_name=cfg.encoder_name,
+base_model = smp.UnetPlusPlus(encoder_name=cfg.encoder_name,
                               encoder_weights=cfg.encoder_weights,
                               in_channels=cfg.in_channels,
                               classes=cfg.classes)
@@ -225,8 +226,6 @@ class HuBMAPModel(nn.Module):
 
 
 for n, (tr, te) in enumerate(kfold):
-
-    from fastai.vision.all import ranger
     fold = n
     print('=' * 10, f'FOLD {n}', '=' * 10)
     X_tr = [imgs_idxs[i] for i in tr]
@@ -264,6 +263,6 @@ for n, (tr, te) in enumerate(kfold):
     # Save Model
     state = {'model': learn.model.state_dict(), 'mean': cfg.mean,
                 'std': cfg.std}
-    torch.save(state, f'unet_{cfg.encoder_name}_{fold}.pth',
+    torch.save(state, f'unetplus_{cfg.encoder_name}_{fold}.pth',
                 pickle_protocol=2, _use_new_zipfile_serialization=False)
-    # del model, train_ds, valid_ds
+    del model, train_ds, valid_ds, learn, data, cbs, state
