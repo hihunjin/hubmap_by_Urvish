@@ -9,7 +9,7 @@ pip install git+https://github.com/qubvel/segmentation_models.pytorch
 
 
 python 1024x1024.py > 1024x1024.txt 2>&1
-unzip -qo masks.zip -d masks;unzip -qo train.zip -d train
+unzip -qo /input/masks.zip -d /input/512x512-reduce-2/masks_v5;unzip -qo /input/train.zip -d /input/512x512-reduce-2/train_v5
 mkdir -p input/512x512-reduce-2
 mv train masks input/512x512-reduce-2/
 

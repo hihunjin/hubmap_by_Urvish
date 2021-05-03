@@ -110,7 +110,7 @@ class CONFIG():
 
     # fastai Learner
     mixed_precision_training = True
-    batch_size = 32
+    batch_size = 24         # 24 for unetpp, 32 for linknet
     weight_decay = 0.01
     loss_func = torch.nn.BCEWithLogitsLoss()
     metrics = [Dice_soft(), Dice_th()]
@@ -214,8 +214,8 @@ class HuBMAPDataset(Dataset):
             img, mask = augmented['image'], augmented['mask']
         return img2tensor((img/255.0 - cfg.mean)/cfg.std), img2tensor(mask)
 
-name = 'Unet'
-base_model = smp.Unet(encoder_name=cfg.encoder_name,
+name = 'UnetPlusPlus'
+base_model = smp.UnetPlusPlus(encoder_name=cfg.encoder_name,
                               encoder_weights=cfg.encoder_weights,
                               in_channels=cfg.in_channels,
                               classes=cfg.classes)

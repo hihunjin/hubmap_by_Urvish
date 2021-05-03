@@ -36,10 +36,10 @@ import os.path
 
 sz = 1024   #the size of tiles
 reduce = 1 #reduce the original images by 4 times 
-MASKS = '../input/hubmap-enhanced-masks/all_masks_v4.csv'
+MASKS = '../input/hubmap-enhanced-masks/all_masks_v5.csv'
 #DATA = '../input/hubmap-kidney-segmentation/train/'
-OUT_TRAIN = 'train.zip'
-OUT_MASKS = 'masks.zip'
+OUT_TRAIN = '/input/train.zip'
+OUT_MASKS = '/input/masks.zip'
 
 
 # In[ ]:
@@ -187,25 +187,25 @@ print('mean:',img_avr, ', std:', img_std)
 # In[ ]:
 
 
-columns, rows = 4,4
-idx0 = 20
-fig=plt.figure(figsize=(columns*4, rows*4))
-with zipfile.ZipFile(OUT_TRAIN, 'r') as img_arch,      zipfile.ZipFile(OUT_MASKS, 'r') as msk_arch:
-    fnames = sorted(img_arch.namelist())[8:]
-    for i in range(rows):
-        for j in range(columns):
-            idx = i+j*columns
-            img = cv2.imdecode(np.frombuffer(img_arch.read(fnames[idx0+idx]), 
-                                             np.uint8), cv2.IMREAD_COLOR)
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            mask = cv2.imdecode(np.frombuffer(msk_arch.read(fnames[idx0+idx]), 
-                                              np.uint8), cv2.IMREAD_GRAYSCALE)
+# columns, rows = 4,4
+# idx0 = 20
+# fig=plt.figure(figsize=(columns*4, rows*4))
+# with zipfile.ZipFile(OUT_TRAIN, 'r') as img_arch,      zipfile.ZipFile(OUT_MASKS, 'r') as msk_arch:
+#     fnames = sorted(img_arch.namelist())[8:]
+#     for i in range(rows):
+#         for j in range(columns):
+#             idx = i+j*columns
+#             img = cv2.imdecode(np.frombuffer(img_arch.read(fnames[idx0+idx]), 
+#                                              np.uint8), cv2.IMREAD_COLOR)
+#             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+#             mask = cv2.imdecode(np.frombuffer(msk_arch.read(fnames[idx0+idx]), 
+#                                               np.uint8), cv2.IMREAD_GRAYSCALE)
     
-            fig.add_subplot(rows, columns, idx+1)
-            plt.axis('off')
-            plt.imshow(Image.fromarray(img))
-            plt.imshow(Image.fromarray(mask), alpha=0.2)
-plt.show()
+#             fig.add_subplot(rows, columns, idx+1)
+#             plt.axis('off')
+#             plt.imshow(Image.fromarray(img))
+#             plt.imshow(Image.fromarray(mask), alpha=0.2)
+# plt.show()
 
 
 # In[ ]:
