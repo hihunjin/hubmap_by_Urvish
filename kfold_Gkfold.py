@@ -22,6 +22,13 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--fold", default=0, type=int,
                     help="fold")
+parser.add_argument("--use_test", default=False, action='store_true',
+                    help="use test?")
+parser.add_argument("--name", default='Linknet', type=str,
+                    help="UnetPlusPlus / Linknet")
+parser.add_argument("--cv", default='groupkfold', type=str,
+                    help="cv method groupkfold / kfold")
+
 args = parser.parse_args()
 
 
@@ -72,16 +79,16 @@ class CONFIG():
     main_path = Path('../input/hubmap-kidney-segmentation')
     data_path = Path('../input/512x512-reduce-2/train/')
     label_path = Path('../input/512x512-reduce-2/masks/')
-    csv_path = '../input/hubmap-enhanced-masks/all_masks_v4.csv'
+    csv_path = '../input/hubmap-enhanced-masks/all_masks_v5.csv'
 
     # use test data
-    use_test = False
+    use_test = args.use_test
 
     # folds
     nfolds = 5
 
     # cv method
-    cv_method = 'kfold' #groupkfold
+    cv_method = args.cv #groupkfold
 
     # seed
     SEED = 2020
@@ -118,7 +125,7 @@ class CONFIG():
     loss_func = torch.nn.BCEWithLogitsLoss()
     metrics = [Dice_soft(), Dice_th()]
     optimizer = ranger
-    max_learning_rate = 3e-3
+    max_learning_rate = 2e-3
     epochs = 16
 
 
@@ -222,12 +229,14 @@ class HuBMAPDataset(Dataset):
             img, mask = augmented['image'], augmented['mask']
         return img2tensor((img/255.0 - cfg.mean)/cfg.std), img2tensor(mask)
 
-name = 'Unet'
-base_model = smp.Unet(encoder_name=cfg.encoder_name,
+
+name = args.name
+base_model = getattr(smp, args.name)(encoder_name=cfg.encoder_name,
                               encoder_weights=cfg.encoder_weights,
                               in_channels=cfg.in_channels,
                               classes=cfg.classes)
-
+cfg.batch_size=24 if name=='UnetPlusPlus' else 32
+cfg.max_learning_rate = 2e-3 if name=='UnetPlusPus' else 3e-3
 
 class HuBMAPModel(nn.Module):
     def __init__(self):
@@ -261,7 +270,7 @@ for n, (tr, te) in enumerate(kfold):
 
     cbs = [SaveModelCallback(monitor='dice_th', comp=np.greater)]
     learn = Learner(data, model, metrics=cfg.metrics, wd=cfg.weight_decay,
-                    loss_func=cfg.loss_func, opt_func=ranger, cbs=cbs, model_dir='models'+'_'+name)
+                    loss_func=cfg.loss_func, opt_func=ranger, cbs=cbs, model_dir='models'+'_'+name+cfg.cv_method+str(fold))
     if cfg.mixed_precision_training:
         learn.to_fp16()
 

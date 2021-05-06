@@ -72,7 +72,7 @@ class CONFIG():
     main_path = Path('../input/hubmap-kidney-segmentation')
     data_path = Path('../input/512x512-reduce-2/train')
     label_path = Path('../input/512x512-reduce-2/masks')
-    csv_path = '../input/hubmap-enhanced-masks/all_masks_v4.csv'
+    csv_path = '../input/hubmap-enhanced-masks/all_masks_v5.csv'
 
     # use test data
     use_test = False
@@ -110,7 +110,7 @@ class CONFIG():
 
     # fastai Learner
     mixed_precision_training = True
-    batch_size = 24         # 24 for unetpp, 32 for linknet
+    batch_size = 32         # 24 for unetpp, 32 for linknet
     weight_decay = 0.01
     loss_func = torch.nn.BCEWithLogitsLoss()
     metrics = [Dice_soft(), Dice_th()]
@@ -165,7 +165,7 @@ print(df_train)
 
 # external_data = [x.replace('.png', '').replace("external_", "") for x in os.listdir(cfg.data_path) if '.png' in x if 'external' in x]
 imgs_idxs = [x.replace('.png', '')
-             for x in os.listdir(cfg.data_path) if '.png' in x]
+             for x in os.listdir(cfg.data_path) if '.png' in x and x[:9] in df_train['id'].values.tolist()]
 if cfg.debug:
     imgs_idxs = imgs_idxs[:cfg.nfolds*cfg.batch_size*2]
 
