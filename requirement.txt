@@ -1,0 +1,8 @@
+opencv-python
+pandas
+fastai
+albumentations
+sklearn
+deepflash2
+rasterio
+git+https://github.com/qubvel/segmentation_models.pytorch
