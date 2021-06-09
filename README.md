@@ -10,5 +10,8 @@ nvidia-docker run -it -e NVIDIA_VISIBLE_DEVICES=0,1 -v $(pwd):/workspace -v $(pw
 
 # Prepare images and masks files
 ```sh
-python 1024x1024.py > 1024x1024.txt 2>&1 unzip -qo /input/masks.zip -d /input/512x512-reduce-2/masks_v5;unzip -qo /input/train.zip -d /input/512x512-reduce-2/train_v5 mkdir -p input/512x512-reduce-2 mv train masks input/512x512-reduce-2/
+python 1024x1024.py > 1024x1024.txt 2>&1
+unzip -qo /input/masks.zip -d /input/512x512-reduce-2/masks_v5;unzip -qo /input/train.zip -d /input/512x512-reduce-2/train_v5
+mkdir -p input/512x512-reduce-2
+mv train masks input/512x512-reduce-2/
 ```
